@@ -1,0 +1,58 @@
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
+
+// Replace with your Blynk Auth Token
+char auth[] = "Your_Blynk_Auth_Token"; // Replace with your Blynk Auth Token
+
+// Wi-Fi credentials
+const char* ssid = "Your_SSID"; // Replace with your Wi-Fi SSID
+const char* password = "Your_Password"; // Replace with your Wi-Fi Password
+
+void setup() {
+    Serial.begin(9600); // Start serial communication with Arduino
+    Blynk.begin(auth, ssid, password); // Connect to Blynk
+}
+
+void loop() {
+    Blynk.run(); // Run Blynk
+
+    // Check for data from Arduino
+    if (Serial.available()) {
+        String currentData = Serial.readStringUntil('\n'); // Read the current sensor data
+
+        // Parse the data and send to Blynk app
+        if (currentData.startsWith("C1:")) {
+            // Extract current sensor 1 value
+            int startIndex = currentData.indexOf(':') + 1;
+            int endIndex = currentData.indexOf(';', startIndex);
+            float sensor1Value = currentData.substring(startIndex, endIndex).toFloat();
+            Blynk.virtualWrite(V3, sensor1Value); // Send to Blynk virtual pin for sensor 1
+        }
+        
+        if (currentData.startsWith("C2:")) {
+            // Extract current sensor 2 value
+            int startIndex = currentData.indexOf(':', endIndex + 1) + 1;
+            float sensor2Value = currentData.substring(startIndex).toFloat();
+            Blynk.virtualWrite(V4, sensor2Value); // Send to Blynk virtual pin for sensor 2
+        }
+    }
+}
+
+// Control relay based on Blynk button presses
+BLYNK_WRITE(V1) { // Button for socket 1
+    int value = param.asInt(); // Get button state
+    if (value == 1) { // If button pressed
+        Serial.println('1'); // Send command to turn on socket 1
+    } else {
+        Serial.println('0'); // Send command to turn off socket 1
+    }
+}
+
+BLYNK_WRITE(V2) { // Button for socket 2
+    int value = param.asInt(); // Get button state
+    if (value == 1) { // If button pressed
+        Serial.println('2'); // Send command to turn on socket 2
+    } else {
+        Serial.println('3'); // Send command to turn off socket 2
+    }
+}
