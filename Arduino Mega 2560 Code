@@ -1,0 +1,74 @@
+#include <BlynkSimpleEsp8266.h> // Include Blynk library for ESP8266
+
+// Define your Blynk auth token
+char auth[] = "Your_Blynk_Auth_Token"; // Replace with your Blynk Auth Token
+
+// Relay pins
+#define RELAY1_PIN 1 // IN1 for socket 2
+#define RELAY3_PIN 3 // IN2 for socket 2
+#define RELAY4_PIN 4 // IN3 for socket 1
+#define RELAY2_PIN 2 // IN4 for socket 1
+
+
+// Current sensor pins
+#define CURRENT_SENSOR1_PIN A2
+#define CURRENT_SENSOR2_PIN A0
+
+// Function prototypes
+void sendCurrentReadings();
+void controlRelay(int relayPin, bool state);
+
+void setup() {
+    Serial.begin(9600); // Start serial communication with NodeMCU
+    pinMode(RELAY1_PIN, OUTPUT);
+    pinMode(RELAY2_PIN, OUTPUT);
+    pinMode(RELAY3_PIN, OUTPUT);
+    pinMode(RELAY4_PIN, OUTPUT);
+}
+
+void loop() {
+    // Check if there's incoming data from the NodeMCU
+    if (Serial.available()) {
+        char command = Serial.read(); // Read command from NodeMCU
+
+        // Control relays based on command received from NodeMCU
+        if (command == '1') { // Turn on socket 1 (relay 4 and 2)
+            controlRelay(RELAY4_PIN, HIGH);
+            controlRelay(RELAY2_PIN, HIGH);
+        } else if (command == '0') { // Turn off socket 1 (relay 4 and 2)
+            controlRelay(RELAY4_PIN, LOW);
+            controlRelay(RELAY2_PIN, LOW);
+        } else if (command == '2') { // Turn on socket 2 (relay 1 and 3)
+            controlRelay(RELAY1_PIN, HIGH);
+            controlRelay(RELAY3_PIN, HIGH);
+        } else if (command == '3') { // Turn off socket 2 (relay 1 and 3)
+            controlRelay(RELAY1_PIN, LOW);
+            controlRelay(RELAY3_PIN, LOW);
+        }
+    }
+
+    // Send current readings to NodeMCU every second
+    sendCurrentReadings();
+    delay(1000); // Wait for 1 second
+}
+
+// Function to send current readings to NodeMCU
+void sendCurrentReadings() {
+    float current1 = analogRead(CURRENT_SENSOR1_PIN); // Read from Sensor 1
+    float current2 = analogRead(CURRENT_SENSOR2_PIN); // Read from Sensor 2
+
+    // Convert the raw reading to a suitable unit (e.g., kWh, adjust as needed)
+    float kWh1 = (current1 / 1024.0) * (5.0 / 30.0); // Example conversion for current sensor 1
+    float kWh2 = (current2 / 1024.0) * (5.0 / 30.0); // Example conversion for current sensor 2
+
+    // Send readings to NodeMCU
+    Serial.print("C1:"); // Prefix for current sensor 1
+    Serial.print(kWh1);
+    Serial.print(";C2:"); // Prefix for current sensor 2
+    Serial.println(kWh2);
+}
+
+// Function to control relay state
+void controlRelay(int relayPin, bool state) {
+    digitalWrite(relayPin, state ? HIGH : LOW);
+}
