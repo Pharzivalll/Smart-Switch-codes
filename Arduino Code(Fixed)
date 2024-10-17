@@ -1,0 +1,73 @@
+// Relay pins
+#define RELAY1_PIN 2 // IN1 for socket 2 (changed from pin 1 to avoid conflicts)
+#define RELAY2_PIN 3 // IN2 for socket 2
+#define RELAY3_PIN 4 // IN3 for socket 1
+#define RELAY4_PIN 5 // IN4 for socket 1
+
+// Current sensor pins
+#define CURRENT_SENSOR1_PIN A2
+#define CURRENT_SENSOR2_PIN A0
+
+// Function prototypes
+void sendCurrentReadings();
+void controlRelay(int relayPin, bool state);
+
+void setup() {
+    Serial.begin(9600);  // Use Serial for debugging and monitoring
+    Serial1.begin(9600); // Use Serial1 for communication with NodeMCU
+
+    pinMode(RELAY1_PIN, OUTPUT);
+    pinMode(RELAY2_PIN, OUTPUT);
+    pinMode(RELAY3_PIN, OUTPUT);
+    pinMode(RELAY4_PIN, OUTPUT);
+}
+
+void loop() {
+    // Check if there's incoming data from the NodeMCU
+    if (Serial1.available()) { // Check Serial1 (used for NodeMCU communication)
+        char command = Serial1.read(); // Read command from NodeMCU
+
+        // Control relays based on command received from NodeMCU
+        if (command == '1') { // Turn on socket 1 (relay 3 and 4)
+            controlRelay(RELAY3_PIN, HIGH);
+            controlRelay(RELAY4_PIN, HIGH);
+        } else if (command == '0') { // Turn off socket 1 (relay 3 and 4)
+            controlRelay(RELAY3_PIN, LOW);
+            controlRelay(RELAY4_PIN, LOW);
+        } else if (command == '2') { // Turn on socket 2 (relay 1 and 2)
+            controlRelay(RELAY1_PIN, HIGH);
+            controlRelay(RELAY2_PIN, HIGH);
+        } else if (command == '3') { // Turn off socket 2 (relay 1 and 2)
+            controlRelay(RELAY1_PIN, LOW);
+            controlRelay(RELAY2_PIN, LOW);
+        }
+    }
+
+    // Send current readings to NodeMCU every second
+    sendCurrentReadings();
+    delay(1000); // Wait for 1 second
+}
+
+// Function to send current readings to NodeMCU
+void sendCurrentReadings() {
+    float current1 = analogRead(CURRENT_SENSOR1_PIN); // Read from Sensor 1
+    float current2 = analogRead(CURRENT_SENSOR2_PIN); // Read from Sensor 2
+
+    // Example current calculation for ACS712 (assuming ACS712-30A version: 66mV/A)
+    float voltage1 = (current1 / 1024.0) * 5.0; // Convert analog to voltage
+    float amps1 = (voltage1 - 2.5) / 0.066; // Convert voltage to current (amps)
+
+    float voltage2 = (current2 / 1024.0) * 5.0; // Convert analog to voltage
+    float amps2 = (voltage2 - 2.5) / 0.066; // Convert voltage to current (amps)
+
+    // Send readings to NodeMCU over Serial1
+    Serial1.print("C1:"); // Prefix for current sensor 1
+    Serial1.print(amps1);
+    Serial1.print(";C2:"); // Prefix for current sensor 2
+    Serial1.println(amps2);
+}
+
+// Function to control relay state
+void controlRelay(int relayPin, bool state) {
+    digitalWrite(relayPin, state ? HIGH : LOW); // Set relay pin to desired state
+}
