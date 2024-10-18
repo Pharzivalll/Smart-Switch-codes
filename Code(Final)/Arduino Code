@@ -9,7 +9,7 @@
 #define CURRENT_SENSOR2_PIN A0
 
 // Constants
-#define VOLTAGE 230.0  // Replace with your mains voltage (alamin kung ano voltage na na r-receive ng current sensor)
+#define VOLTAGE 230.0  // Replace with your mains voltage (alamin kung ano voltage ng nakasaksak)
 #define SAMPLE_INTERVAL 1000  // Interval between readings in milliseconds (1 second)
 
 // Variables to track energy consumption
