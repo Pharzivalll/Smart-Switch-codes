@@ -8,6 +8,15 @@
 #define CURRENT_SENSOR1_PIN A2
 #define CURRENT_SENSOR2_PIN A0
 
+// Constants
+#define VOLTAGE 230.0  // Replace with your mains voltage (alamin kung ano voltage na na r-receive ng current sensor)
+#define SAMPLE_INTERVAL 1000  // Interval between readings in milliseconds (1 second)
+
+// Variables to track energy consumption
+float energy1 = 0;  // kWh for sensor 1
+float energy2 = 0;  // kWh for sensor 2
+unsigned long lastSampleTime = 0;  // To store the last time a sample was taken
+
 // Function prototypes
 void sendCurrentReadings();
 void controlRelay(int relayPin, bool state);
@@ -48,23 +57,41 @@ void loop() {
     delay(1000); // Wait for 1 second
 }
 
-// Function to send current readings to NodeMCU
+// Function to send current readings and energy consumption to NodeMCU
 void sendCurrentReadings() {
-    float current1 = analogRead(CURRENT_SENSOR1_PIN); // Read from Sensor 1
-    float current2 = analogRead(CURRENT_SENSOR2_PIN); // Read from Sensor 2
+    unsigned long currentMillis = millis();
+    
+    // Check if the sample interval has passed
+    if (currentMillis - lastSampleTime >= SAMPLE_INTERVAL) {
+        lastSampleTime = currentMillis;
 
-    // Example current calculation for ACS712 (assuming ACS712-30A version: 66mV/A)
-    float voltage1 = (current1 / 1024.0) * 5.0; // Convert analog to voltage
-    float amps1 = (voltage1 - 2.5) / 0.066; // Convert voltage to current (amps)
+        // Read current values from sensors
+        float current1 = analogRead(CURRENT_SENSOR1_PIN); 
+        float current2 = analogRead(CURRENT_SENSOR2_PIN);
 
-    float voltage2 = (current2 / 1024.0) * 5.0; // Convert analog to voltage
-    float amps2 = (voltage2 - 2.5) / 0.066; // Convert voltage to current (amps)
+        // Convert the analog readings to current in amps (assuming ACS712-30A sensor)
+        float voltage1 = (current1 / 1024.0) * 5.0;
+        float amps1 = (voltage1 - 2.5) / 0.066;
 
-    // Send readings to NodeMCU over Serial1
-    Serial1.print("C1:"); // Prefix for current sensor 1
-    Serial1.print(amps1);
-    Serial1.print(";C2:"); // Prefix for current sensor 2
-    Serial1.println(amps2);
+        float voltage2 = (current2 / 1024.0) * 5.0;
+        float amps2 = (voltage2 - 2.5) / 0.066;
+
+        // Calculate power in watts (P = V * I)
+        float power1 = VOLTAGE * amps1;  // Power for sensor 1 in watts
+        float power2 = VOLTAGE * amps2;  // Power for sensor 2 in watts
+
+        // Convert power to kW and calculate energy (kWh = kW * time in hours)
+        float timeInHours = SAMPLE_INTERVAL / 3600000.0;  // Convert milliseconds to hours
+        energy1 += (power1 / 1000.0) * timeInHours;  // kWh for sensor 1
+        energy2 += (power2 / 1000.0) * timeInHours;  // kWh for sensor 2
+
+        // Send current readings and energy consumption to NodeMCU over Serial1
+        Serial1.print("C1:"); 
+        Serial1.print(energy1);  // Current in amps for sensor 1
+        Serial1.print("C2:"); 
+        Serial1.println(energy2);  // Current in amps for sensor 2
+      
+    }
 }
 
 // Function to control relay state
