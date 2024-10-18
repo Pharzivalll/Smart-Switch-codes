@@ -6,10 +6,10 @@ IMPORTANT THINGS TO CONSIDER
 
 Wiring changes:
 
-NodeMCU GPIO1 (TX) → Arduino Mega RX1 (Pin 19)
+NodeMCU GPIO1 (TX) → Arduino Mega RX1 (Pin 19);
 NodeMCU GPIO3 (RX) → Arduino Mega TX1 (Pin 18)
 
-Arduino Mega (Pin 2) → Relay(IN1)
-Arduino Mega (Pin 3) → Relay(IN2)
-Arduino Mega (Pin 4) → Relay(IN3)
-Arduino Mega (Pin 5) → Relay(IN4)
+Arduino Mega (Pin 2) → Relay(IN1);
+Arduino Mega (Pin 3) → Relay(IN2);
+Arduino Mega (Pin 4) → Relay(IN3);
+Arduino Mega (Pin 5) → Relay(IN4);
