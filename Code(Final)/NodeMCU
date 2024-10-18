@@ -1,0 +1,71 @@
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
+
+// Replace with your Blynk Auth Token
+char auth[] = "Your_Blynk_Auth_Token"; // Replace with your Blynk Auth Token
+
+// Wi-Fi credentials
+const char* ssid = "Your_SSID";         // Replace with your Wi-Fi SSID
+const char* password = "Your_Password"; // Replace with your Wi-Fi Password
+
+void setup() {
+    Serial.begin(9600); // Start serial communication with Arduino
+    Blynk.begin(auth, ssid, password); // Connect to Blynk
+
+    // Ensure Wi-Fi connection is established
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        Serial.print(".");
+    }
+    Serial.println("WiFi connected");
+}
+
+void loop() {
+    Blynk.run(); // Run Blynk service
+
+    // Check for data from Arduino Mega
+    if (Serial.available()) {
+        String currentData = Serial.readStringUntil('\n'); // Read the current sensor data
+
+        // Check if both C1 and C2 are present in the incoming data
+        if (currentData.indexOf("C1:") != -1 && currentData.indexOf("C2:") != -1) {
+            // Parsing logic for C1 and C2
+            int sensor1Start = currentData.indexOf("C1:") + 3;
+            int sensor1End = currentData.indexOf(";", sensor1Start);
+            if (sensor1Start > 0 && sensor1End > sensor1Start) {
+                float sensor1Value = currentData.substring(sensor1Start, sensor1End).toFloat();
+                Blynk.virtualWrite(V3, sensor1Value); // Send sensor 1 value to Virtual Pin 3
+            }
+
+            int sensor2Start = currentData.indexOf("C2:") + 3;
+            if (sensor2Start > 0) {
+                float sensor2Value = currentData.substring(sensor2Start).toFloat();
+                Blynk.virtualWrite(V4, sensor2Value); // Send sensor 2 value to Virtual Pin 4
+            }
+        } else {
+            // Print error message if the data format is invalid
+            Serial.println("Error: Invalid data format");
+        }
+    }
+}
+
+
+// Blynk button control for socket 1 (V1)
+BLYNK_WRITE(V1) { 
+    int value = param.asInt(); // Get the button state from Blynk app
+    if (value == 1) { // If button is pressed (turn on socket 1)
+        Serial.println("1"); // Send command to turn on socket 1 to Arduino
+    } else { // If button is released (turn off socket 1)
+        Serial.println("0"); // Send command to turn off socket 1 to Arduino
+    }
+}
+
+// Blynk button control for socket 2 (V2)
+BLYNK_WRITE(V2) { 
+    int value = param.asInt(); // Get the button state from Blynk app
+    if (value == 1) { // If button is pressed (turn on socket 2)
+        Serial.println("2"); // Send command to turn on socket 2 to Arduino
+    } else { // If button is released (turn off socket 2)
+        Serial.println("3"); // Send command to turn off socket 2 to Arduino
+    }
+}
