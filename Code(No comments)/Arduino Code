@@ -1,1 +1,84 @@
+#define RELAY1_PIN 2 // IN1 for socket 2 
+#define RELAY2_PIN 3 // IN2 for socket 2
+#define RELAY3_PIN 4 // IN3 for socket 1
+#define RELAY4_PIN 5 // IN4 for socket 1
 
+#define CURRENT_SENSOR1_PIN A2
+#define CURRENT_SENSOR2_PIN A0
+
+#define VOLTAGE 230.0  
+#define SAMPLE_INTERVAL 1000  
+
+float energy1 = 0;  // kWh for sensor 1
+float energy2 = 0;  // kWh for sensor 2
+unsigned long lastSampleTime = 0;  
+
+void sendCurrentReadings();
+void controlRelay(int relayPin, bool state);
+
+void setup() {
+    Serial.begin(9600);  
+    Serial1.begin(9600); 
+
+    pinMode(RELAY1_PIN, OUTPUT);
+    pinMode(RELAY2_PIN, OUTPUT);
+    pinMode(RELAY3_PIN, OUTPUT);
+    pinMode(RELAY4_PIN, OUTPUT);
+}
+
+void loop() {
+    if (Serial1.available()) { 
+        char command = Serial1.read(); 
+
+        if (command == '1') { 
+            controlRelay(RELAY3_PIN, HIGH);
+            controlRelay(RELAY4_PIN, HIGH);
+        } else if (command == '0') { 
+            controlRelay(RELAY3_PIN, LOW);
+            controlRelay(RELAY4_PIN, LOW);
+        } else if (command == '2') { 
+            controlRelay(RELAY1_PIN, HIGH);
+            controlRelay(RELAY2_PIN, HIGH);
+        } else if (command == '3') { 
+            controlRelay(RELAY1_PIN, LOW);
+            controlRelay(RELAY2_PIN, LOW);
+        }
+    }
+
+    sendCurrentReadings();
+    delay(1000); 
+}
+
+void sendCurrentReadings() {
+    unsigned long currentMillis = millis();
+    
+    if (currentMillis - lastSampleTime >= SAMPLE_INTERVAL) {
+        lastSampleTime = currentMillis;
+
+        float current1 = analogRead(CURRENT_SENSOR1_PIN); 
+        float current2 = analogRead(CURRENT_SENSOR2_PIN);
+
+        float voltage1 = (current1 / 1024.0) * 5.0;
+        float amps1 = (voltage1 - 2.5) / 0.066;
+
+        float voltage2 = (current2 / 1024.0) * 5.0;
+        float amps2 = (voltage2 - 2.5) / 0.066;
+
+        float power1 = VOLTAGE * amps1; 
+        float power2 = VOLTAGE * amps2;  
+
+        float timeInHours = SAMPLE_INTERVAL / 3600000.0; 
+        energy1 += (power1 / 1000.0) * timeInHours;  
+        energy2 += (power2 / 1000.0) * timeInHours;  
+
+        Serial1.print("C1:"); 
+        Serial1.print(energy1);  
+        Serial1.print("C2:"); 
+        Serial1.println(energy2);
+      
+    }
+}
+
+void controlRelay(int relayPin, bool state) {
+    digitalWrite(relayPin, state ? HIGH : LOW);
+}
