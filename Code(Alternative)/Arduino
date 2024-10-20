@@ -1,0 +1,105 @@
+// Relay pins
+#define RELAY1_PIN 2 
+#define RELAY2_PIN 3 
+#define RELAY3_PIN 4 
+#define RELAY4_PIN 5 
+
+// Current sensor pins
+#define CURRENT_SENSOR1_PIN A2
+#define CURRENT_SENSOR2_PIN A0
+
+// Constants
+#define VOLTAGE 230.0  
+#define SAMPLE_INTERVAL 1000  // Interval between readings in milliseconds (1 second)
+
+// Variables to track energy consumption
+float energy1 = 0;  // kWh for sensor 1
+float energy2 = 0;  // kWh for sensor 2
+unsigned long lastSampleTime = 0;  // To store the last time a sample was taken
+
+void setup() {
+    Serial.begin(9600);  // Use Serial for debugging and monitoring
+    Serial1.begin(9600); // Use Serial1 for communication with NodeMCU
+
+    while (Serial.available() == 0) {
+        delay(100);  // Wait until serial data is available (from NodeMCU)
+    }
+
+    if (Serial1.available()) {
+        energy1 = readSensorData("B1:"); // Read sensor 1 value
+        energy2 = readSensorData("B2:"); // Read sensor 2 value
+    }
+
+    pinMode(RELAY1_PIN, OUTPUT);
+    pinMode(RELAY2_PIN, OUTPUT);
+    pinMode(RELAY3_PIN, OUTPUT);
+    pinMode(RELAY4_PIN, OUTPUT);
+}
+
+// Function to read data from serial input until the specified keyword is found
+float readSensorData(const String& keyword) {
+    String inputData = "";
+    
+    // Wait until the keyword is detected
+    while (!inputData.startsWith(keyword)) {
+        if (Serial.available() > 0) {
+            inputData += (char)Serial.read(); // Collect incoming characters
+        }
+    }
+    
+    // Clear the keyword and collect the value
+    inputData = "";  // Reset inputData for actual float value
+    while (Serial.available() > 0) {
+        char incomingChar = (char)Serial.read();
+        if (incomingChar == '\n') {
+            break;  // Exit when newline is found
+        }
+        inputData += incomingChar; // Build the string for the float value
+    }
+    
+    return inputData.toFloat();
+}
+
+void loop() {
+    // Check if there's incoming data from the NodeMCU
+    if (Serial1.available()) {
+        char command = Serial1.read(); // Read command from NodeMCU
+        if (command == '1') { controlRelay(RELAY3_PIN, HIGH); controlRelay(RELAY4_PIN, HIGH); }
+        else if (command == '0') { controlRelay(RELAY3_PIN, LOW); controlRelay(RELAY4_PIN, LOW); }
+        else if (command == '2') { controlRelay(RELAY1_PIN, HIGH); controlRelay(RELAY2_PIN, HIGH); }
+        else if (command == '3') { controlRelay(RELAY1_PIN, LOW); controlRelay(RELAY2_PIN, LOW); }
+    }
+
+    unsigned long currentMillis = millis();
+    if (currentMillis - lastSampleTime >= SAMPLE_INTERVAL) {
+        lastSampleTime = currentMillis;
+        sendCurrentReadings();  // Sample and send readings to NodeMCU every second
+    }
+}
+
+void sendCurrentReadings() {
+    float current1 = analogRead(CURRENT_SENSOR1_PIN); 
+    float current2 = analogRead(CURRENT_SENSOR2_PIN);
+
+    float voltage1 = (current1 / 1024.0) * 5.0;
+    float amps1 = (voltage1 - 2.5) / 0.066;
+
+    float voltage2 = (current2 / 1024.0) * 5.0;
+    float amps2 = (voltage2 - 2.5) / 0.066;
+
+    float power1 = VOLTAGE * amps1;  
+    float power2 = VOLTAGE * amps2;  
+
+    float timeInHours = SAMPLE_INTERVAL / 3600000.0; 
+    energy1 += (power1 / 1000.0) * timeInHours;  
+    energy2 += (power2 / 1000.0) * timeInHours;
+
+    Serial1.print("C1:"); 
+    Serial1.print(energy1);  
+    Serial1.print("C2:"); 
+    Serial1.println(energy2);
+}
+
+void controlRelay(int relayPin, bool state) {
+    digitalWrite(relayPin, state ? HIGH : LOW); 
+}
