@@ -1,0 +1,66 @@
+// Relay pins
+constexpr int RELAY1_PIN = 2, RELAY2_PIN = 3, RELAY3_PIN = 4, RELAY4_PIN = 5;
+
+// Current sensor pins
+constexpr int CURRENT_SENSOR1_PIN = A2, CURRENT_SENSOR2_PIN = A0;
+
+// Constants
+constexpr float VOLTAGE = 230.0; 
+constexpr unsigned long SAMPLE_INTERVAL = 1000;  
+
+float energy1 = 0, energy2 = 0;
+unsigned long lastSampleTime = 0;
+
+void setup() {
+    Serial.begin(9600);
+    Serial1.begin(9600); 
+
+    pinMode(RELAY1_PIN, OUTPUT);
+    pinMode(RELAY2_PIN, OUTPUT);
+    pinMode(RELAY3_PIN, OUTPUT);
+    pinMode(RELAY4_PIN, OUTPUT);
+}
+
+void loop() {
+    // Handle incoming data from NodeMCU
+    if (Serial1.available()) {
+        char command = Serial1.read();
+        controlRelay(command);  // Direct relay control based on command
+    }
+
+    if (millis() - lastSampleTime >= SAMPLE_INTERVAL) {
+        lastSampleTime = millis();
+        sendCurrentReadings();  // Send readings at regular intervals
+    }
+}
+
+void controlRelay(char command) {
+    switch (command) {
+        case '1':  // Turn on socket 1
+        case '0':  // Turn off socket 1
+            digitalWrite(RELAY3_PIN, command == '1' ? HIGH : LOW);
+            digitalWrite(RELAY4_PIN, command == '1' ? HIGH : LOW);
+            break;
+        case '2':  // Turn on socket 2
+        case '3':  // Turn off socket 2
+            digitalWrite(RELAY1_PIN, command == '2' ? HIGH : LOW);
+            digitalWrite(RELAY2_PIN, command == '2' ? HIGH : LOW);
+            break;
+    }
+}
+
+void sendCurrentReadings() {
+    // Read current from sensors
+    float amps1 = (analogRead(CURRENT_SENSOR1_PIN) * 5.0 / 1024.0 - 2.5) / 0.066;
+    float amps2 = (analogRead(CURRENT_SENSOR2_PIN) * 5.0 / 1024.0 - 2.5) / 0.066;
+
+    // Calculate energy consumption
+    energy1 += (VOLTAGE * amps1 / 1000.0) * (SAMPLE_INTERVAL / 3600000.0);  
+    energy2 += (VOLTAGE * amps2 / 1000.0) * (SAMPLE_INTERVAL / 3600000.0);  
+
+    // Send energy readings
+    Serial1.print("C1:");
+    Serial1.print(energy1);
+    Serial1.print(";C2:");
+    Serial1.println(energy2);
+}
