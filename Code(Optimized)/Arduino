@@ -1,64 +1,76 @@
-// Relay pins
-constexpr int RELAY1_PIN = 2, RELAY2_PIN = 3, RELAY3_PIN = 4, RELAY4_PIN = 5;
+// Arduino Code: Improved structure, error handling, and modularization
 
-// Current sensor pins
-constexpr int CURRENT_SENSOR1_PIN = A2, CURRENT_SENSOR2_PIN = A0;
+// Constants and Pins
+constexpr int RELAY_PINS[] = {2, 3, 4, 5};         // Array to hold relay pins
+constexpr int CURRENT_SENSOR_PINS[] = {A2, A0};   // Array for current sensor pins
+constexpr float VOLTAGE = 230.0;                  // System voltage
+constexpr unsigned long SAMPLE_INTERVAL = 1000;   // Data sampling interval in milliseconds
 
-// Constants
-constexpr float VOLTAGE = 230.0; 
-constexpr unsigned long SAMPLE_INTERVAL = 1000;  
-
+// Variables to track energy consumption
 float energy1 = 0, energy2 = 0;
 unsigned long lastSampleTime = 0;
 
+// Setup function: Initialize pins and serial communication
 void setup() {
-    Serial.begin(9600);
-    Serial1.begin(9600); 
+    Serial.begin(9600);          // Serial for debugging
+    Serial1.begin(9600);         // Serial1 for communication with NodeMCU
 
-    pinMode(RELAY1_PIN, OUTPUT);
-    pinMode(RELAY2_PIN, OUTPUT);
-    pinMode(RELAY3_PIN, OUTPUT);
-    pinMode(RELAY4_PIN, OUTPUT);
+    // Set relay pins as output
+    for (int i = 0; i < 4; i++) {
+        pinMode(RELAY_PINS[i], OUTPUT);
+    }
 }
 
+// Main loop function
 void loop() {
-    // Handle incoming data from NodeMCU
+    // Handle incoming commands from NodeMCU via Serial1
     if (Serial1.available()) {
         char command = Serial1.read();
-        controlRelay(command);  // Direct relay control based on command
+        controlRelay(command);    // Control relay based on the command received
     }
 
+    // Sample current readings at the specified interval
     if (millis() - lastSampleTime >= SAMPLE_INTERVAL) {
         lastSampleTime = millis();
-        sendCurrentReadings();  // Send readings at regular intervals
+        sendCurrentReadings();    // Send current sensor readings to NodeMCU
     }
 }
 
+// Function to control relays based on incoming commands
 void controlRelay(char command) {
     switch (command) {
         case '1':  // Turn on socket 1
         case '0':  // Turn off socket 1
-            digitalWrite(RELAY3_PIN, command == '1' ? HIGH : LOW);
-            digitalWrite(RELAY4_PIN, command == '1' ? HIGH : LOW);
+            controlSocket(2, 3, command);  // Relays for socket 1 (Relay3 and Relay4)
             break;
         case '2':  // Turn on socket 2
         case '3':  // Turn off socket 2
-            digitalWrite(RELAY1_PIN, command == '2' ? HIGH : LOW);
-            digitalWrite(RELAY2_PIN, command == '2' ? HIGH : LOW);
+            controlSocket(0, 1, command);  // Relays for socket 2 (Relay1 and Relay2)
+            break;
+        default:
+            Serial.println("Error: Invalid command received.");
             break;
     }
 }
 
+// Function to control two relays (a socket)
+void controlSocket(int relay1, int relay2, char command) {
+    bool state = (command == '1' || command == '2') ? HIGH : LOW;
+    digitalWrite(RELAY_PINS[relay1], state);  // Control relay 1
+    digitalWrite(RELAY_PINS[relay2], state);  // Control relay 2
+}
+
+// Function to read current sensors and send energy data
 void sendCurrentReadings() {
     // Read current from sensors
-    float amps1 = (analogRead(CURRENT_SENSOR1_PIN) * 5.0 / 1024.0 - 2.5) / 0.066;
-    float amps2 = (analogRead(CURRENT_SENSOR2_PIN) * 5.0 / 1024.0 - 2.5) / 0.066;
+    float amps1 = (analogRead(CURRENT_SENSOR_PINS[0]) * 5.0 / 1024.0 - 2.5) / 0.066;
+    float amps2 = (analogRead(CURRENT_SENSOR_PINS[1]) * 5.0 / 1024.0 - 2.5) / 0.066;
 
-    // Calculate energy consumption
-    energy1 += (VOLTAGE * amps1 / 1000.0) * (SAMPLE_INTERVAL / 3600000.0);  
-    energy2 += (VOLTAGE * amps2 / 1000.0) * (SAMPLE_INTERVAL / 3600000.0);  
+    // Calculate energy consumption in kilowatt-hours (kWh)
+    energy1 += (VOLTAGE * amps1 / 1000.0) * (SAMPLE_INTERVAL / 3600000.0);
+    energy2 += (VOLTAGE * amps2 / 1000.0) * (SAMPLE_INTERVAL / 3600000.0);
 
-    // Send energy readings
+    // Send the calculated energy data to NodeMCU via Serial1
     Serial1.print("C1:");
     Serial1.print(energy1);
     Serial1.print(";C2:");
