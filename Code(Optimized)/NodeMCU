@@ -1,0 +1,57 @@
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
+
+#define STORE_CURRENT1_VALUE V5
+#define STORE_CURRENT2_VALUE V6 
+
+char auth[] = "Your_Blynk_Auth_Token"; 
+const char* ssid = "Your_SSID";         
+const char* password = "Your_Password"; 
+
+void setup() {
+    Serial.begin(9600); 
+    Blynk.begin(auth, ssid, password);
+
+    // Wait until Wi-Fi is connected
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        Serial.print(".");
+    }
+    Serial.println("WiFi connected");
+}
+
+void loop() {
+    Blynk.run(); 
+
+    // Check and parse incoming data
+    if (Serial.available()) {
+        String currentData = Serial.readStringUntil('\n');
+        if (currentData.indexOf("C1:") != -1 && currentData.indexOf("C2:") != -1) {
+            float sensor1Value = currentData.substring(currentData.indexOf("C1:") + 3, currentData.indexOf(";", currentData.indexOf("C1:"))).toFloat();
+            float sensor2Value = currentData.substring(currentData.indexOf("C2:") + 3).toFloat();
+
+            Blynk.virtualWrite(V3, sensor1Value);
+            Blynk.virtualWrite(STORE_CURRENT1_VALUE, sensor1Value);
+            Blynk.virtualWrite(V4, sensor2Value);
+            Blynk.virtualWrite(STORE_CURRENT2_VALUE, sensor2Value);
+        } else {
+            Serial.println("Error: Invalid data format");
+        }
+    }
+}
+
+BLYNK_WRITE(V1) {
+    Serial.println(param.asInt() ? "1" : "0"); 
+}
+
+BLYNK_WRITE(V2) {
+    Serial.println(param.asInt() ? "2" : "3"); 
+}
+
+BLYNK_WRITE(STORE_CURRENT1_VALUE) { 
+    Serial.println("B1:" + String(param.asFloat()));
+}
+
+BLYNK_WRITE(STORE_CURRENT2_VALUE) { 
+    Serial.println("B2:" + String(param.asFloat()));
+}
