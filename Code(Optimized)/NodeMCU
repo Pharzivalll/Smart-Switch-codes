@@ -1,57 +1,50 @@
 #include <ESP8266WiFi.h>
 #include <BlynkSimpleEsp8266.h>
 
-#define STORE_CURRENT1_VALUE V5
-#define STORE_CURRENT2_VALUE V6 
+// Wi-Fi and Blynk Authentication
+char auth[] = "Your_Blynk_Auth_Token";  // Blynk authentication token
+const char* ssid = "Your_SSID";         // Wi-Fi SSID
+const char* password = "Your_Password"; // Wi-Fi password
 
-char auth[] = "Your_Blynk_Auth_Token"; 
-const char* ssid = "Your_SSID";         
-const char* password = "Your_Password"; 
-
+// Setup function: Initialize Blynk and Wi-Fi
 void setup() {
-    Serial.begin(9600); 
-    Blynk.begin(auth, ssid, password);
+    Serial.begin(9600);  // Start serial communication for debugging
+    Blynk.begin(auth, ssid, password);  // Start Blynk connection
 
     // Wait until Wi-Fi is connected
     while (WiFi.status() != WL_CONNECTED) {
         delay(500);
         Serial.print(".");
     }
-    Serial.println("WiFi connected");
+    Serial.println("WiFi connected");  // Print Wi-Fi connected message
 }
 
+// Loop function: Main logic for handling Blynk and serial data
 void loop() {
-    Blynk.run(); 
+    Blynk.run();  // Keep Blynk running
 
-    // Check and parse incoming data
+    // Read incoming data from Arduino over Serial
     if (Serial.available()) {
-        String currentData = Serial.readStringUntil('\n');
+        String currentData = Serial.readStringUntil('\n');  // Read until newline
         if (currentData.indexOf("C1:") != -1 && currentData.indexOf("C2:") != -1) {
             float sensor1Value = currentData.substring(currentData.indexOf("C1:") + 3, currentData.indexOf(";", currentData.indexOf("C1:"))).toFloat();
             float sensor2Value = currentData.substring(currentData.indexOf("C2:") + 3).toFloat();
 
-            Blynk.virtualWrite(V3, sensor1Value);
-            Blynk.virtualWrite(STORE_CURRENT1_VALUE, sensor1Value);
-            Blynk.virtualWrite(V4, sensor2Value);
-            Blynk.virtualWrite(STORE_CURRENT2_VALUE, sensor2Value);
+            // Send current sensor data to Blynk
+            Blynk.virtualWrite(V3, sensor1Value);  // Update sensor 1 value on Blynk dashboard
+            Blynk.virtualWrite(V4, sensor2Value);  // Update sensor 2 value on Blynk dashboard
         } else {
-            Serial.println("Error: Invalid data format");
+            Serial.println("Error: Invalid data format received from Arduino");
         }
     }
 }
 
+// Blynk button event handler for controlling relay 1 (Socket 1)
 BLYNK_WRITE(V1) {
-    Serial.println(param.asInt() ? "1" : "0"); 
+    Serial.println(param.asInt() ? "1" : "0");  // Send control command to Arduino
 }
 
+// Blynk button event handler for controlling relay 2 (Socket 2)
 BLYNK_WRITE(V2) {
-    Serial.println(param.asInt() ? "2" : "3"); 
-}
-
-BLYNK_WRITE(STORE_CURRENT1_VALUE) { 
-    Serial.println("B1:" + String(param.asFloat()));
-}
-
-BLYNK_WRITE(STORE_CURRENT2_VALUE) { 
-    Serial.println("B2:" + String(param.asFloat()));
+    Serial.println(param.asInt() ? "2" : "3");  // Send control command to Arduino
 }
