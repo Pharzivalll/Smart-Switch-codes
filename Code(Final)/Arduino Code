@@ -51,13 +51,14 @@ void loop() {
             controlRelay(RELAY2_PIN, LOW);
         }
 
-      unsigned long currentMillis = millis();
-      if (currentMillis - lastSampleTime >= SAMPLE_INTERVAL) {
-        lastSampleTime = currentMillis;
-        sendCurrentReadings();  // Sample and send readings to NodeMCU every second
+        unsigned long currentMillis = millis();
+        if (currentMillis - lastSampleTime >= SAMPLE_INTERVAL) {
+          lastSampleTime = currentMillis;
+          sendCurrentReadings();  // Sample and send readings to NodeMCU every second
+        }
     }
-
 }
+
 
 // Function to send current readings and energy consumption to NodeMCU
 void sendCurrentReadings() {
@@ -84,7 +85,7 @@ void sendCurrentReadings() {
     // Send current readings and energy consumption to NodeMCU over Serial1
     Serial1.print("C1:"); 
     Serial1.print(energy1);  // Current in amps for sensor 1
-    Serial1.print("C2:"); 
+    Serial1.print(";C2:"); 
     Serial1.println(energy2);  // Current in amps for sensor 2
 
   }
