@@ -4,7 +4,7 @@
 constexpr int RELAY_PINS[] = {2, 3, 4, 5};         // Array to hold relay pins
 constexpr int CURRENT_SENSOR_PINS[] = {A2, A0};   // Array for current sensor pins
 constexpr float VOLTAGE = 230.0;                  // System voltage
-constexpr unsigned long SAMPLE_INTERVAL = 1000;   // Data sampling interval in milliseconds
+constexpr unsigned long SAMPLE_INTERVAL = 60000;   // Current reading is updated every minute
 
 // Variables to track energy consumption
 float energy1 = 0, energy2 = 0;
