@@ -10,7 +10,7 @@
 
 // Constants
 #define VOLTAGE 230.0  // Replace with your mains voltage (alamin kung ano voltage ng nakasaksak)
-#define SAMPLE_INTERVAL 1000  // Interval between readings in milliseconds (1 second)
+#define SAMPLE_INTERVAL 60000  // Interval between readings in milliseconds (1 minute)
 
 // Variables to track energy consumption
 float energy1 = 0;  // kWh for sensor 1
@@ -50,12 +50,12 @@ void loop() {
             controlRelay(RELAY1_PIN, LOW);
             controlRelay(RELAY2_PIN, LOW);
         }
-
-        unsigned long currentMillis = millis();
-        if (currentMillis - lastSampleTime >= SAMPLE_INTERVAL) {
-          lastSampleTime = currentMillis;
-          sendCurrentReadings();  // Sample and send readings to NodeMCU every second
-        }
+    }
+    unsigned long currentMillis = millis();
+    if (currentMillis - lastSampleTime >= SAMPLE_INTERVAL) {
+      lastSampleTime = currentMillis;
+      sendCurrentReadings();  // Sample and send readings to NodeMCU every second
+    
     }
 }
 
@@ -89,7 +89,7 @@ void sendCurrentReadings() {
     Serial1.println(energy2);  // Current in amps for sensor 2
 
   }
-}
+
 
 // Function to control relay state
 void controlRelay(int relayPin, bool state) {
