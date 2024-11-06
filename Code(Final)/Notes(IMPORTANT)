@@ -1,0 +1,38 @@
+In order for the code of the nodeMCU to work, certain libraries need to be installed on your system, here is the specific gudie you should follow:
+
+To install the libraries for the ESP32 and Blynk, you’ll need to follow these steps:
+
+### 1. Install the ESP32 Core in Arduino IDE
+If you haven’t already set up your Arduino IDE for ESP32, you’ll need to install the ESP32 board support first.
+
+1. **Open Arduino IDE**.
+2. **Go to** `File` > `Preferences`.
+3. In the **Additional Board Manager URLs** field, enter:
+   ```
+   https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+   ```
+   If there are other URLs there, separate them with a comma.
+4. **Go to** `Tools` > `Board` > `Boards Manager`.
+5. In the Boards Manager, search for **ESP32**.
+6. **Install** the **esp32** package by **Espressif Systems**.
+
+Once installed, you can select your ESP32 board from `Tools` > `Board`.
+
+### 2. Install the Blynk Library
+
+1. **Go to** `Sketch` > `Include Library` > `Manage Libraries`.
+2. In the Library Manager, search for **Blynk**.
+3. Find **Blynk by Volodymyr Shymanskyy** and click **Install**.
+
+This installs the Blynk library and gives you access to all `BlynkSimple` headers, including `BlynkSimpleEsp32.h`.
+
+### 3. Include Libraries in Your Code
+
+After installing, add these lines to your code:
+
+```cpp
+#include <WiFi.h>             // For ESP32 WiFi
+#include <BlynkSimpleEsp32.h>  // For Blynk with ESP32
+```
+
+Now you should be ready to upload the code to your ESP32!
