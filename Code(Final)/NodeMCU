@@ -1,9 +1,9 @@
 #define BLYNK_TEMPLATE_ID "TMPL6Qz7GefLn"
 #define BLYNK_TEMPLATE_NAME "Quickstart Template"
-#define BLYNK_AUTH_TOKEN "7pNytv-0WZHiTjTka2DId0xTv0wYTpUX”
+#define BLYNK_AUTH_TOKEN "7pNytv-0WZHiTjTka2DId0xTv0wYTpUX"
 
-#include <ESP8266WiFi.h>
-#include <BlynkSimpleEsp8266.h>
+#include <WiFi.h>
+#include <BlynkSimpleEsp32.h>  
 
 // Wi-Fi credentials
 const char* ssid = "Your_SSID";         // Replace with your Wi-Fi SSID
