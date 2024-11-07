@@ -1,0 +1,91 @@
+#define BLYNK_TEMPLATE_ID "TMPL6Qz7GefLn"
+#define BLYNK_TEMPLATE_NAME "Quickstart Device"
+#define BLYNK_AUTH_TOKEN "x6CTKzH_sku98M0MyUIAOmUfSfTzlzHP"
+
+#include <Blynk.h>
+#include <WiFi.h>
+#include <WiFiClient.h>
+#include <BlynkSimpleEsp32.h>
+
+#define VIRTUAL_PIN_1 V1
+#define VIRTUAL_PIN_2 V2
+#define VIRTUAL_PIN_3 V3
+#define VIRTUAL_PIN_4 V4
+#define VIRTUAL_PIN_5 V5
+
+String currentData = "Start";
+String globalMessage = "Initial message";
+BlynkTimer timer;
+
+char ssid[] = "YourNetworkName";
+char password[] = "YourPassword";  // Declare password variable
+
+// Blynk button control for socket 1 (V1)
+BLYNK_WRITE(VIRTUAL_PIN_1) { 
+    int value = param.asInt(); // Get the button state from Blynk app
+    if (value == 1) { // If button is pressed (turn on socket 1)
+        Serial.println("1"); // Send command to turn on socket 1 to Arduino
+    } else { // If button is released (turn off socket 1)
+        Serial.println("0"); // Send command to turn off socket 1 to Arduino
+    }
+}
+
+// Blynk button control for socket 2 (V2)
+BLYNK_WRITE(VIRTUAL_PIN_2) { 
+    int value = param.asInt(); // Get the button state from Blynk app
+    if (value == 1) { // If button is pressed (turn on socket 2)
+        Serial.println("2"); // Send command to turn on socket 2 to Arduino
+    } else { // If button is released (turn off socket 2)
+        Serial.println("3"); // Send command to turn off socket 2 to Arduino
+    }
+}
+
+// This function sends Arduino's uptime every second to Virtual Pin 2.
+void SEND_CURRENT_READINGS() {
+  if (currentData.indexOf("C1:") != -1 && currentData.indexOf("C2:") != -1) {
+        // Parsing logic for C1 and C2
+        int sensor1Start = currentData.indexOf("C1:") + 3;
+        int sensor1End = currentData.indexOf(";", sensor1Start);
+        if (sensor1Start > 0 && sensor1End > sensor1Start) {
+            float sensor1Value = currentData.substring(sensor1Start, sensor1End).toFloat();
+            Blynk.virtualWrite(VIRTUAL_PIN_3, sensor1Value); // Send sensor 1 value to Virtual Pin 3
+        }
+
+        int sensor2Start = currentData.indexOf("C2:") + 3;
+        if (sensor2Start > 0) {
+            float sensor2Value = currentData.substring(sensor2Start).toFloat();
+            Blynk.virtualWrite(VIRTUAL_PIN_4, sensor2Value); // Send sensor 2 value to Virtual Pin 4
+        }
+    } else {
+        // Print error message if the data format is invalid
+        globalMessage = "Invalid_Format";
+    }
+}
+
+void Terminal() {
+  Blynk.virtualWrite(VIRTUAL_PIN_5, globalMessage);  // Fix the function call
+}
+
+void setup() {
+    Serial.begin(9600);  // Start serial communication with Arduino
+    Blynk.begin(BLYNK_AUTH_TOKEN, ssid, password);  // Connect to Blynk
+    timer.setInterval(1000L, Terminal);
+
+    // Ensure Wi-Fi connection is established
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        globalMessage = "...";
+    }
+    globalMessage = "Wifi_Connected!";
+}
+
+void loop() {
+    Blynk.run();  // Run Blynk service
+    timer.run();
+    // Check for data from Arduino Mega
+    if (Serial.available()) {
+      String currentData = Serial.readStringUntil('\n');  // Read the current sensor data
+      SEND_CURRENT_READINGS();
+      globalMessage = currentData;  // Fixed: no need for c_str()
+    }
+}
