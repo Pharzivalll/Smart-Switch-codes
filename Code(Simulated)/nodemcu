@@ -1,0 +1,33 @@
+void setup() {
+    Serial.begin(9600);  // Use Serial for debugging and monitoring
+    Serial.println("Connection Successful");
+}
+
+void loop() {
+    // Check if there's incoming data from the NodeMCU
+    if (Serial.available()) { // Check Serial1 (used for NodeMCU communication)
+         String currentData = Serial.readStringUntil('\n'); // Read the current sensor data
+
+        // Check if both C1 and C2 are present in the incoming data
+        if (currentData.indexOf("C1:") != -1 && currentData.indexOf("C2:") != -1) {
+            // Parsing logic for C1 and C2
+            int sensor1Start = currentData.indexOf("C1:") + 3;
+            int sensor1End = currentData.indexOf(";", sensor1Start);
+            if (sensor1Start > 0 && sensor1End > sensor1Start) {
+                float sensor1Value = currentData.substring(sensor1Start, sensor1End).toFloat();
+                Serial.println(sensor1Value);
+            }
+
+            int sensor2Start = currentData.indexOf("C2:") + 3;
+            if (sensor2Start > 0) {
+                float sensor2Value = currentData.substring(sensor2Start).toFloat();
+                Serial.println(sensor2Value);
+            }
+        } else {
+            // Print error message if the data format is invalid
+            Serial.println("Error: Invalid data format");
+        }
+    }
+}
+
+        
