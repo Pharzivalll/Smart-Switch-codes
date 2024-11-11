@@ -1,0 +1,40 @@
+How to extract firmware of Arduino Mega 2560
+
+1. Find avrdude and avrdude.conf:
+    They’re located in the hardware/tools/avr/bin and hardware/tools/avr/etc folders of your Arduino installation directory.
+    For avrdude executable: C:\Users\CELLCOMTECH\AppData\Local\Arduino15\packages\arduino\tools\avrdude\6.3.0-arduino17\bin
+    FOr avrdude.config: C:\Users\CELLCOMTECH\AppData\Local\Arduino15\packages\arduino\tools\avrdude\6.3.0-arduino17\etc
+
+Step 2: Download (Read) the Firmware from the Arduino Mega 2560
+    To download the firmware, use avrdude to read the flash memory and save it to a .hex file.
+    
+    Open Command Prompt (or Terminal on macOS/Linux).
+    
+    Run the following command, replacing:
+    
+    <path-to-avrdude> with the path to the avrdude executable.
+    <path-to-avrdude.conf> with the path to avrdude.conf.
+    <COM_PORT> with the serial port of your Arduino (e.g., COM3 or /dev/ttyUSB0).
+    C:\Users\<YourUsername>\Desktop\ with the desired output file directory.
+
+command:
+<path-to-avrdude> -C <path-to-avrdude.conf> -p m2560 -c wiring -P <COM_PORT> -b 115200 -U flash:r:C:\Users\<YourUsername>\Desktop\firmware_backup.hex:i
+
+example:
+"C:\Program Files (x86)\Arduino\hardware\tools\avr\bin\avrdude.exe" -C "C:\Program Files (x86)\Arduino\hardware\tools\avr\etc\avrdude.conf" -p m2560 -c wiring -P COM3 -b 115200 -U flash:r:C:\Users\<YourUsername>\Desktop\firmware_backup.hex:i
+
+
+
+HOW TO UPLOAD HEX FILE BACK TO ARDUINO
+
+1. Run the following command, replacing firmware.hex with the path to the .hex file you want to upload.
+
+<path-to-avrdude> -C <path-to-avrdude.conf> -p m2560 -c wiring -P <COM_PORT> -b 115200 -U flash:w:C:\Users\<YourUsername>\Desktop\firmware_backup.hex:i
+
+EXAMPLE:
+
+"C:\Program Files (x86)\Arduino\hardware\tools\avr\bin\avrdude.exe" -C "C:\Program Files (x86)\Arduino\hardware\tools\avr\etc\avrdude.conf" -p m2560 -c wiring -P COM3 -b 115200 -U flash:w:C:\Users\<YourUsername>\Desktop\firmware_backup.hex:i
+
+
+
+   
