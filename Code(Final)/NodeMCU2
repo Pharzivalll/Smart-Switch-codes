@@ -2,10 +2,8 @@
 #define BLYNK_TEMPLATE_NAME "Quickstart Device"
 #define BLYNK_AUTH_TOKEN "x6CTKzH_sku98M0MyUIAOmUfSfTzlzHP"
 
-#include <Blynk.h>
-#include <WiFi.h>
-#include <WiFiClient.h>
-#include <BlynkSimpleEsp32.h>
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
 
 #define VIRTUAL_PIN_1 V1
 #define VIRTUAL_PIN_2 V2
@@ -17,8 +15,8 @@ String currentData = "Start";
 String globalMessage = "Initial message";
 BlynkTimer timer;
 
-char ssid[] = "YourNetworkName";
-char password[] = "YourPassword";  // Declare password variable
+char ssid[] = "MAGLOADKA";
+char password[] = "09466149098Ivan";  // Declare password variable
 
 // Blynk button control for socket 1 (V1)
 BLYNK_WRITE(VIRTUAL_PIN_1) { 
