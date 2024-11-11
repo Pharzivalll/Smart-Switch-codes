@@ -1,0 +1,20 @@
+How to extract the program of an Esp32 NodemCU microconmtroller
+
+1. Install Python from this link: https://www.python.org/downloads/
+    IMPORTANT: make sure to check the box "install from path"
+2. Run cmd
+    To check if successfully installed: python --version
+3. Install esptool: pip install esptool
+4. Run the flash size command to know the flash size of the nodeMCU: esptool.py --port /dev/ttyUSB0 flash_id
+    NOTE: replace "/dev/ttyUSB0" with the port name, if you don't know the port name, go to device manager and find ports
+5. Read the flash memory: esptool.py --port /dev/ttyUSB0 --baud 115200 read_flash 0x00000 0x400000 C:\Users\YourUsername\Desktop\firmware_backup.bin
+    NOTES: Replace /dev/ttyUSB0 with your ESP32’s serial port and adjust 0x400000 if your ESP32 has a different flash size (0x400000 is for 4MB). 
+    Replace C:\Users\YourUsername\Desktop\ with your desired file path.
+
+
+HOW TO UPLOAD:
+1. Erase the Flash (Optional): esptool.py --port /dev/ttyUSB0 erase_flash
+2. Write the New Firmware: esptool.py --port /dev/ttyUSB0 --baud 115200 write_flash 0x00000 new_firmware.bin
+    NOTE: Replace /dev/ttyUSB0 with your actual serial port (e.g., COM3 on Windows) and firmware_backup.bin with the full path to your .bin file if it’s saved in a different directory.
+
+    
